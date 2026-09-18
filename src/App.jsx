@@ -9,6 +9,7 @@ import {
   Mic,
   Paperclip,
   RotateCcw,
+  Settings,
   UploadCloud,
   Send,
   Sparkles,
@@ -16,6 +17,7 @@ import {
   Video,
   Volume2,
   VolumeX,
+  X,
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
@@ -458,7 +460,183 @@ function FilesPanel({ attachments, onPick, onRemove, onDrop }) {
   );
 }
 
-function Sidebar({ sessionId }) {
+function CopyBlock({ code }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+  return (
+    <div className="relative">
+      <pre className="overflow-x-auto rounded-xl border border-white/10 bg-black/40 p-3 pr-10 text-[12px] leading-relaxed text-emerald-300/90">
+        <code>{code}</code>
+      </pre>
+      <button
+        onClick={copy}
+        title="Copy"
+        className="absolute right-2 top-2 rounded-lg p-1.5 text-white/40 hover:bg-white/10 hover:text-white"
+      >
+        {copied ? <Check size={14} /> : <Copy size={14} />}
+      </button>
+    </div>
+  );
+}
+
+function EmbedModal({ open, onClose }) {
+  const [agentUrl, setAgentUrl] = useState(() => window.location.origin);
+  const [title, setTitle] = useState("Aether Agent");
+  const [width, setWidth] = useState(380);
+  const [height, setHeight] = useState(600);
+  const [position, setPosition] = useState("right");
+
+  const widgetSnippet = `<script
+  src="${agentUrl}/widget.js"
+  data-agent-url="${agentUrl}"
+  data-title="${title}"
+  data-width="${width}"
+  data-height="${height}"
+  data-position="${position}"
+></script>`;
+
+  const iframeSnippet = `<iframe
+  src="${agentUrl}/?embed=1"
+  style="width:${width}px;height:${height}px;border:0;border-radius:16px;"
+></iframe>`;
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 10 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#101116] shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <div className="text-[15px] font-semibold text-white">
+                  Embed this agent (iframe)
+                </div>
+                <div className="text-[12px] text-white/40">
+                  Drop it into any other project as a floating widget or inline panel
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-lg p-1.5 text-white/40 hover:bg-white/10 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="mb-5 grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="mb-1 block text-[11px] text-white/50">
+                    Deployed frontend URL
+                  </label>
+                  <input
+                    value={agentUrl}
+                    onChange={(e) => setAgentUrl(e.target.value)}
+                    placeholder="https://your-frontend.example.com"
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[13px] text-white outline-none placeholder:text-white/25 focus:border-fuchsia-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] text-white/50">Title</label>
+                  <input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[13px] text-white outline-none focus:border-fuchsia-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] text-white/50">Position</label>
+                  <select
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[13px] text-white outline-none focus:border-fuchsia-500/50"
+                  >
+                    <option value="right">Right</option>
+                    <option value="left">Left</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] text-white/50">Width (px)</label>
+                  <input
+                    type="number"
+                    value={width}
+                    onChange={(e) => setWidth(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[13px] text-white outline-none focus:border-fuchsia-500/50"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] text-white/50">Height (px)</label>
+                  <input
+                    type="number"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[13px] text-white outline-none focus:border-fuchsia-500/50"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-1.5 text-[12px] font-medium text-white/70">
+                Option A — Floating widget (recommended)
+              </div>
+              <div className="mb-4">
+                <CopyBlock code={widgetSnippet} />
+              </div>
+
+              <div className="mb-1.5 text-[12px] font-medium text-white/70">
+                Option B — Inline iframe
+              </div>
+              <div className="mb-5">
+                <CopyBlock code={iframeSnippet} />
+              </div>
+
+              <div className="mb-1.5 text-[12px] font-medium text-white/70">Setup steps</div>
+              <ol className="mb-2 list-decimal space-y-1.5 pl-4 text-[12px] leading-relaxed text-white/60">
+                <li>Deploy the backend (FastAPI) and copy its public URL.</li>
+                <li>
+                  Set <code className="text-white/80">VITE_API_BASE</code> in the frontend's{" "}
+                  <code className="text-white/80">.env</code> to that backend URL, then build /
+                  redeploy the frontend.
+                </li>
+                <li>
+                  Enter the deployed frontend URL above so the generated snippets point to the
+                  right place.
+                </li>
+                <li>Paste Option A or Option B into the HTML of the project you're embedding into.</li>
+                <li>Open that page and test — messages should reach your live backend.</li>
+              </ol>
+              <div className="text-[11px] text-white/30">
+                CORS on the backend already allows all origins, so any site can embed this
+                without extra backend config.
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function Sidebar({ sessionId, onOpenEmbed }) {
   return (
     <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-white/10 bg-white/[0.02] p-4">
       <div className="flex items-center gap-2 mb-6">
@@ -498,7 +676,14 @@ function Sidebar({ sessionId }) {
         ))}
       </div>
 
-      <div className="mt-auto text-[11px] text-white/25">
+      <button
+        onClick={onOpenEmbed}
+        className="mt-auto flex items-center gap-2 rounded-md px-2 py-2 text-[13px] text-white/60 hover:bg-white/[0.05] hover:text-white"
+      >
+        <Settings size={14} />
+        Settings
+      </button>
+      <div className="mt-3 text-[11px] text-white/25">
         Core loop demo · Python + FastAPI + Gemini
       </div>
     </aside>
@@ -511,6 +696,7 @@ export default function App() {
   );
   const [sessionId] = useState(() => uid());
   const [mode, setMode] = useState("text");
+  const [embedModalOpen, setEmbedModalOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -688,7 +874,9 @@ export default function App() {
         <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-cyan-500/10 blur-[120px]" />
       </div>
 
-      {!embed && <Sidebar sessionId={sessionId} />}
+      {!embed && (
+        <Sidebar sessionId={sessionId} onOpenEmbed={() => setEmbedModalOpen(true)} />
+      )}
 
       <div className="flex flex-1 flex-col min-w-0">
         <header
@@ -869,6 +1057,8 @@ export default function App() {
           )}
         </div>
       </div>
+
+      <EmbedModal open={embedModalOpen} onClose={() => setEmbedModalOpen(false)} />
     </div>
   );
 }
