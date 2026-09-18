@@ -569,10 +569,14 @@ function EmbedModal({ open, onClose }) {
                   <select
                     value={position}
                     onChange={(e) => setPosition(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-[13px] text-white outline-none focus:border-fuchsia-500/50"
+                    className="w-full rounded-xl border border-white/10 bg-[#16171c] px-3 py-2 text-[13px] text-white outline-none focus:border-fuchsia-500/50"
                   >
-                    <option value="right">Right</option>
-                    <option value="left">Left</option>
+                    <option value="right" className="bg-[#16171c] text-white">
+                      Right
+                    </option>
+                    <option value="left" className="bg-[#16171c] text-white">
+                      Left
+                    </option>
                   </select>
                 </div>
                 <div>
